@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 - repository polish and GitHub community files
+- added a Linux x86_64 PyInstaller binary release archive
+- added checksums for downloadable artifacts
+- added release notes for binary distribution
 
 ## 2026-04-13
 

@@ -82,7 +82,21 @@ sudo apt install util-linux polkit exfatprogs dosfstools ntfs-3g e2fsprogs
 
 ## Download and Use
 
-If you want a ready-to-download package from GitHub, use the portable archive from the repository and run:
+If you want a real Linux binary release from GitHub, use:
+
+```text
+usbformat-iso-burner-linux-x86_64.tar.gz
+```
+
+Extract and run:
+
+```bash
+tar -xzf usbformat-iso-burner-linux-x86_64.tar.gz
+cd usbformat-iso-burner-linux-x86_64
+./usbformat-iso-burner
+```
+
+If you prefer the Python-based portable package, use:
 
 ```bash
 tar -xzf usbformat-iso-burner-portable.tar.gz
@@ -113,6 +127,9 @@ Or use:
 ## Repository Files
 
 - `iso_gui.py`: main application source
+- `usbformat-iso-burner-linux-x86_64.tar.gz`: Linux x86_64 binary release archive
+- `SHA256SUMS`: checksums for downloadable release artifacts
+- `build-binary-release.sh`: rebuild script for the Linux binary release
 - `run.sh`: simple launcher script
 - `install.sh`: local user installation helper
 - `usbformat-iso-burner.desktop`: desktop launcher definition
