@@ -9,6 +9,8 @@ Simple PyQt6 desktop app for Linux that can:
 
 The app is designed for local Linux use and asks for elevated privileges with `pkexec` only when a destructive operation starts.
 
+This project is open source and open to improvements, bug reports, and pull requests.
+
 ## Features
 
 - GUI for selecting removable drives
@@ -58,6 +60,13 @@ From the project directory:
 python3 iso_gui.py
 ```
 
+## Open Source
+
+- License: `MIT`
+- Contributions: welcome through issues and pull requests
+- Code of conduct: see [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md)
+- Contribution guide: see [`CONTRIBUTING.md`](./CONTRIBUTING.md)
+
 ## How It Works
 
 The application uses:
@@ -95,4 +104,4 @@ The main GUI lives in [`iso_gui.py`](./iso_gui.py).
 
 ## License
 
-No license file is included yet. Add one before reuse or redistribution if needed.
+This project is released under the `MIT` License. See [`LICENSE`](./LICENSE).
