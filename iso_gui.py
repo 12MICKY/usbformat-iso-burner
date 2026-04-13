@@ -29,6 +29,103 @@ from PyQt6.QtWidgets import (
 
 
 LSBLK_COLUMNS = "NAME,PATH,TYPE,SIZE,MODEL,TRAN,HOTPLUG,RM,MOUNTPOINTS"
+APP_STYLESHEET = """
+QWidget {
+    background: #f4efe6;
+    color: #1f2933;
+    font-family: "Noto Sans", "DejaVu Sans", sans-serif;
+    font-size: 14px;
+}
+QTabWidget::pane {
+    border: 1px solid #d6c6ad;
+    border-radius: 14px;
+    background: #fffdf8;
+    margin-top: 8px;
+}
+QTabBar::tab {
+    background: #eadfcf;
+    border: 1px solid #d6c6ad;
+    border-bottom: none;
+    padding: 10px 16px;
+    margin-right: 6px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    font-weight: 600;
+}
+QTabBar::tab:selected {
+    background: #fffdf8;
+    color: #7a4b20;
+}
+QListWidget, QTextEdit {
+    background: #fffdf8;
+    border: 1px solid #d6c6ad;
+    border-radius: 14px;
+    padding: 8px;
+}
+QListWidget::item {
+    padding: 12px;
+    margin: 4px 0;
+    border-radius: 10px;
+}
+QListWidget::item:selected {
+    background: #f3dcc4;
+    color: #1f2933;
+}
+QPushButton {
+    background: #b9652a;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-weight: 600;
+}
+QPushButton:hover {
+    background: #9f5724;
+}
+QPushButton:disabled {
+    background: #ccb9a3;
+    color: #f8f5ef;
+}
+QPushButton[danger="true"] {
+    background: #8f2d1f;
+}
+QPushButton[danger="true"]:hover {
+    background: #772418;
+}
+QLabel[card="true"] {
+    background: #fffdf8;
+    border: 1px solid #d6c6ad;
+    border-radius: 14px;
+    padding: 14px;
+}
+QLabel[muted="true"] {
+    color: #5d6b7a;
+}
+QLabel[status="ready"] {
+    background: #dcefd8;
+    color: #1d5f35;
+    border: 1px solid #b8d9b0;
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-weight: 700;
+}
+QLabel[status="busy"] {
+    background: #fde8c8;
+    color: #915c00;
+    border: 1px solid #f2cb8c;
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-weight: 700;
+}
+QLabel[status="warn"] {
+    background: #f7d7d2;
+    color: #922b21;
+    border: 1px solid #e9b2a8;
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-weight: 700;
+}
+"""
 
 
 def load_block_devices() -> list[dict]:
@@ -64,6 +161,11 @@ def mounted_partitions(device: dict) -> list[str]:
 
 def format_device(device: dict) -> str:
     model = (device.get("model") or "-").strip() or "-"
+    flag_text = device_flags_text(device)
+    return f"{model}  |  {device['size']}\n{device['path']}  |  {flag_text}"
+
+
+def device_flags_text(device: dict) -> str:
     tran = device.get("tran") or "-"
     flags = []
     if device.get("rm"):
@@ -72,8 +174,28 @@ def format_device(device: dict) -> str:
         flags.append("hotplug")
     if tran == "usb":
         flags.append("usb")
-    flag_text = ", ".join(flags) if flags else "fixed"
-    return f'{device["path"]}  {device["size"]}  {model}  [{flag_text}]'
+    return ", ".join(flags) if flags else "fixed"
+
+
+def device_summary_html(device: dict | None) -> str:
+    if device is None:
+        return (
+            "<b>No drive selected</b><br>"
+            "<span style='color:#5d6b7a'>Select a removable drive to see details here.</span>"
+        )
+
+    model = (device.get("model") or "-").strip() or "-"
+    transport = device.get("tran") or "-"
+    mounted = mounted_partitions(device)
+    mounted_text = ", ".join(mounted) if mounted else "none"
+    return (
+        f"<b>{model}</b><br>"
+        f"Path: <code>{device['path']}</code><br>"
+        f"Size: {device['size']}<br>"
+        f"Transport: {transport}<br>"
+        f"Flags: {device_flags_text(device)}<br>"
+        f"Mounted partitions: {mounted_text}"
+    )
 
 
 def run_root_command(command: list[str]) -> int:
@@ -201,23 +323,32 @@ class UsbUtilityWindow(QWidget):
         self.process: QProcess | None = None
 
         self.setWindowTitle("USB Formatter and ISO Flasher")
-        self.resize(820, 620)
+        self.resize(920, 720)
+        self.setStyleSheet(APP_STYLESHEET)
 
         layout = QVBoxLayout()
+        layout.setSpacing(14)
 
         title = QLabel("USB Formatter and ISO Flasher")
-        title.setStyleSheet("font-size: 20px; font-weight: bold;")
+        title.setStyleSheet("font-size: 28px; font-weight: 800; color: #7a4b20;")
         layout.addWidget(title)
 
         help_text = QLabel(
             "เลือกแฟลชไดรฟ์ปลายทางสำหรับฟอร์แมตหรือแฟลช ISO ทุกการทำงานจะลบข้อมูลบนไดรฟ์ที่เลือก"
         )
         help_text.setWordWrap(True)
+        help_text.setProperty("muted", True)
         layout.addWidget(help_text)
 
         disk_row = QHBoxLayout()
         disk_label = QLabel("USB Drives")
         disk_row.addWidget(disk_label)
+
+        disk_row.addStretch(1)
+
+        self.status_badge = QLabel("Ready")
+        self.status_badge.setProperty("status", "ready")
+        disk_row.addWidget(self.status_badge)
 
         self.refresh_btn = QPushButton("Refresh")
         self.refresh_btn.clicked.connect(self.load_devices)
@@ -225,7 +356,14 @@ class UsbUtilityWindow(QWidget):
         layout.addLayout(disk_row)
 
         self.disk_list = QListWidget()
+        self.disk_list.currentItemChanged.connect(self.on_selection_changed)
         layout.addWidget(self.disk_list)
+
+        self.selection_summary = QLabel()
+        self.selection_summary.setProperty("card", True)
+        self.selection_summary.setWordWrap(True)
+        self.selection_summary.setTextFormat(Qt.TextFormat.RichText)
+        layout.addWidget(self.selection_summary)
 
         self.tabs = QTabWidget()
         self.tabs.addTab(self.build_format_tab(), "Format USB")
@@ -241,6 +379,8 @@ class UsbUtilityWindow(QWidget):
 
         self.setLayout(layout)
         self.load_devices()
+        self.update_status("ready", "Ready")
+        self.update_selection_summary()
 
     def build_format_tab(self) -> QWidget:
         tab = QWidget()
@@ -256,6 +396,7 @@ class UsbUtilityWindow(QWidget):
         self.fs_buttons: dict[str, QPushButton] = {}
         for filesystem in ("exfat", "fat32", "ntfs", "ext4"):
             button = QPushButton(f"Format as {filesystem.upper()}")
+            button.setProperty("danger", True)
             button.clicked.connect(
                 lambda _checked=False, fs=filesystem: self.start_format(fs)
             )
@@ -278,6 +419,7 @@ class UsbUtilityWindow(QWidget):
 
         iso_row = QHBoxLayout()
         self.iso_label = QLabel("ISO: ยังไม่ได้เลือกไฟล์")
+        self.iso_label.setProperty("card", True)
         self.iso_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         iso_row.addWidget(self.iso_label, 1)
 
@@ -286,7 +428,8 @@ class UsbUtilityWindow(QWidget):
         iso_row.addWidget(self.browse_btn)
         layout.addLayout(iso_row)
 
-        self.flash_btn = QPushButton("Flash ISO")
+        self.flash_btn = QPushButton("Write ISO to USB")
+        self.flash_btn.setProperty("danger", True)
         self.flash_btn.clicked.connect(self.start_flash)
         layout.addWidget(self.flash_btn)
 
@@ -308,6 +451,26 @@ class UsbUtilityWindow(QWidget):
         if filename:
             self.iso_path = filename
             self.iso_label.setText(f"ISO: {filename}")
+            self.update_action_state()
+
+    def update_status(self, kind: str, text: str) -> None:
+        self.status_badge.setProperty("status", kind)
+        self.status_badge.setText(text)
+        self.status_badge.style().unpolish(self.status_badge)
+        self.status_badge.style().polish(self.status_badge)
+
+    def update_selection_summary(self) -> None:
+        self.selection_summary.setText(device_summary_html(self.selected_device()))
+
+    def update_action_state(self) -> None:
+        device_selected = self.selected_device() is not None
+        self.flash_btn.setEnabled(bool(self.iso_path) and device_selected and self.process is None)
+        for button in self.fs_buttons.values():
+            button.setEnabled(device_selected and self.process is None)
+
+    def on_selection_changed(self) -> None:
+        self.update_selection_summary()
+        self.update_action_state()
 
     def load_devices(self) -> None:
         self.disk_list.clear()
@@ -315,12 +478,19 @@ class UsbUtilityWindow(QWidget):
 
         if not self.devices:
             self.disk_list.addItem("No USB/removable drives detected")
+            self.update_status("warn", "No drive detected")
+            self.update_selection_summary()
+            self.update_action_state()
             return
 
         for device in self.devices:
             item = QListWidgetItem(format_device(device))
             item.setData(Qt.ItemDataRole.UserRole, device["path"])
             self.disk_list.addItem(item)
+        self.disk_list.setCurrentRow(0)
+        self.update_status("ready", f"{len(self.devices)} drive(s) available")
+        self.update_selection_summary()
+        self.update_action_state()
 
     def selected_device(self) -> dict | None:
         item = self.disk_list.currentItem()
@@ -336,9 +506,8 @@ class UsbUtilityWindow(QWidget):
         self.refresh_btn.setEnabled(not busy)
         self.disk_list.setEnabled(not busy)
         self.browse_btn.setEnabled(not busy)
-        self.flash_btn.setEnabled(not busy)
-        for button in self.fs_buttons.values():
-            button.setEnabled(not busy)
+        self.update_status("busy" if busy else "ready", "Working..." if busy else "Ready")
+        self.update_action_state()
 
     def confirm_device(self, device: dict, action_text: str) -> bool:
         typed, ok = QInputDialog.getText(
@@ -416,11 +585,14 @@ class UsbUtilityWindow(QWidget):
         self.append_log(data)
 
     def on_finished(self, exit_code: int, _exit_status) -> None:
+        self.process = None
         self.set_busy(False)
         self.load_devices()
         if exit_code == 0:
+            self.update_status("ready", "Operation complete")
             QMessageBox.information(self, "Done", "Operation complete")
             return
+        self.update_status("warn", "Operation failed")
         QMessageBox.warning(
             self,
             "Failed",
