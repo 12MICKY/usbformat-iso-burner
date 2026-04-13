@@ -1,94 +1,25 @@
 # USB Formatter and ISO Burner
 
-A Linux desktop utility for formatting removable USB drives and writing ISO images with a focused PyQt6 interface.
+Linux desktop utility for:
 
-## Overview
+- formatting removable USB drives as `exFAT`, `FAT32`, `NTFS`, or `ext4`
+- writing `.iso` images directly to USB drives
+- showing operation logs and live write progress in a focused PyQt6 GUI
 
-This project provides a small Linux-first GUI for two common low-level USB tasks:
+This project is Linux-first, open source, and intended for local desktop use with explicit confirmation before destructive actions.
 
-- detect USB and removable drives
-- format a selected drive as `exFAT`, `FAT32`, `NTFS`, or `ext4`
-- flash an `.iso` image directly to a USB drive with `dd`
-- show progress and command output in a built-in log panel
+## Download
 
-The app is designed for local Linux use and asks for elevated privileges with `pkexec` only when a destructive operation starts.
+Latest release:
 
-This project is open source and open to improvements, bug reports, and pull requests.
+- Release page: `https://github.com/12MICKY/usbformat-iso-burner/releases/tag/v0.2.0`
+- Linux binary: `usbformat-iso-burner-linux-x86_64.tar.gz`
+- Portable Python package: `usbformat-iso-burner-portable.tar.gz`
+- Checksums: `SHA256SUMS`
 
 ## Quick Start
 
-Download the repository archive or clone the project, then run:
-
-```bash
-./run.sh
-```
-
-If `PyQt6` is not installed yet:
-
-```bash
-pip install -r requirements.txt
-./run.sh
-```
-
-## Features
-
-- GUI for selecting removable drives
-- Manual refresh for device detection
-- Confirmation prompt that requires typing the target device path
-- Automatic unmount before formatting or flashing
-- Built-in log output for progress and errors
-- Live progress bar while writing ISO images
-- Portable package included in the repository
-- Optional local desktop launcher installation via `install.sh`
-
-## Intended Platform
-
-- primary target: Linux desktop systems
-- tested flow: Python + PyQt6 + `pkexec`
-- not intended for Windows or macOS in its current form
-
-## Requirements
-
-- Linux
-- Python 3.10+
-- `PyQt6`
-- `lsblk`
-- `pkexec` from polkit
-- `wipefs`
-- `umount`
-- `sync`
-- `dd`
-
-For filesystem formatting support, install the tools you need:
-
-- `mkfs.exfat`
-- `mkfs.vfat`
-- `mkfs.ntfs`
-- `mkfs.ext4`
-
-## Install
-
-Install Python dependency:
-
-```bash
-pip install PyQt6
-```
-
-On Debian/Ubuntu-based systems, the system tools are typically available from packages such as:
-
-```bash
-sudo apt install util-linux polkit exfatprogs dosfstools ntfs-3g e2fsprogs
-```
-
-## Download and Use
-
-If you want a real Linux binary release from GitHub, use:
-
-```text
-usbformat-iso-burner-linux-x86_64.tar.gz
-```
-
-Extract and run:
+### Option 1: Linux binary
 
 ```bash
 tar -xzf usbformat-iso-burner-linux-x86_64.tar.gz
@@ -96,7 +27,7 @@ cd usbformat-iso-burner-linux-x86_64
 ./usbformat-iso-burner
 ```
 
-If you prefer the Python-based portable package, use:
+### Option 2: Portable Python package
 
 ```bash
 tar -xzf usbformat-iso-burner-portable.tar.gz
@@ -104,95 +35,141 @@ cd usbformat-iso-burner-portable
 ./run.sh
 ```
 
-For local installation with an application launcher:
+### Option 3: Run from source
 
 ```bash
-./install.sh
-```
-
-## Run
-
-From the project directory:
-
-```bash
-python3 iso_gui.py
-```
-
-Or use:
-
-```bash
+pip install -r requirements.txt
 ./run.sh
 ```
 
-## Repository Files
-
-- `iso_gui.py`: main application source
-- `usbformat-iso-burner-linux-x86_64.tar.gz`: Linux x86_64 binary release archive
-- `SHA256SUMS`: checksums for downloadable release artifacts
-- `build-binary-release.sh`: rebuild script for the Linux binary release
-- `run.sh`: simple launcher script
-- `install.sh`: local user installation helper
-- `usbformat-iso-burner.desktop`: desktop launcher definition
-- `usbformat-iso-burner-portable.tar.gz`: portable archive for direct download
-- `requirements.txt`: Python dependency list
-
-## Development
-
-Run a basic verification locally:
+## Verify Downloads
 
 ```bash
-python3 -m py_compile iso_gui.py
-python3 -m unittest discover -s tests -p "test_*.py"
+sha256sum -c SHA256SUMS
 ```
 
-## Open Source
+Current checksums:
 
-- License: `MIT`
-- Contributions: welcome through issues and pull requests
-- Code of conduct: see [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md)
-- Contribution guide: see [`CONTRIBUTING.md`](./CONTRIBUTING.md)
-- Security policy: see [`SECURITY.md`](./SECURITY.md)
-- Changelog: see [`CHANGELOG.md`](./CHANGELOG.md)
+```text
+08877a816af9b7cf1450ab1305ab6270112ff78c25de0486f6ae3a72f1c2cf57  usbformat-iso-burner-linux-x86_64.tar.gz
+8fb45e2624247009528e1c4c10fdf1ad8104d3a3449bc86547ca6c357fd5fc51  usbformat-iso-burner-portable.tar.gz
+```
+
+## Features
+
+- detects USB and removable drives via `lsblk`
+- formats selected devices as `exFAT`, `FAT32`, `NTFS`, or `ext4`
+- writes ISO images with `dd`
+- automatically unmounts mounted target partitions first
+- requires typed confirmation of the target device path
+- shows log output inside the app
+- shows live progress while writing ISO images
+- includes a Python portable package and a Linux binary release
+
+## Runtime Requirements
+
+- Linux desktop environment
+- `pkexec` from polkit
+- `lsblk`
+- `umount`
+- `wipefs`
+- `sync`
+- `dd`
+
+Filesystem tools used when formatting:
+
+- `mkfs.exfat`
+- `mkfs.vfat`
+- `mkfs.ntfs`
+- `mkfs.ext4`
+
+On Debian/Ubuntu-based systems:
+
+```bash
+sudo apt install util-linux polkit exfatprogs dosfstools ntfs-3g e2fsprogs
+```
+
+If running from source or the portable Python package:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Safety
+
+- formatting and ISO writing overwrite the selected target device
+- ISO writing targets the whole disk, not a single partition
+- the app asks you to type the target device path before destructive actions
+- always verify the selected device, for example `/dev/sdb`, before confirming
+- never use this tool on a drive you are not prepared to erase
 
 ## How It Works
 
 The application uses:
 
 - `lsblk -J` to discover block devices
-- `pkexec` to relaunch the script with root privileges for destructive actions
-- `umount` to unmount mounted partitions on the selected target
+- `pkexec` to relaunch worker operations with root privileges
+- `umount` to detach mounted target partitions
 - `wipefs -a` before formatting
-- `mkfs.*` to create the selected filesystem
-- `dd` to write an ISO image directly to the whole device
-- a GUI progress indicator that parses `dd` byte progress output during ISO writes
+- `mkfs.*` for filesystem creation
+- `dd` for direct ISO-to-device writes
+- a GUI progress bar that parses `dd` byte progress output
 
-The main GUI lives in [`iso_gui.py`](./iso_gui.py).
+Main source file:
 
-## Safety Notes
+- [`iso_gui.py`](./iso_gui.py)
 
-- Formatting and ISO flashing overwrite the selected target device.
-- Always verify the device path, for example `/dev/sdb`, before confirming.
-- Flashing an ISO writes to the whole disk, not a single partition.
-- Run this only on drives you are prepared to erase.
+## Install As Desktop App
 
-## Project Structure
+To install for the current user with a desktop launcher:
 
-```text
-.
-├── install.sh
-├── iso_gui.py
-├── requirements.txt
-├── run.sh
-├── usbformat-iso-burner.desktop
-└── README.md
+```bash
+./install.sh
 ```
 
-## Possible Improvements
+This installs files into:
 
-- package the app with a desktop entry and icon
-- add unit tests for device parsing and validation logic
-- support labels and partition table creation explicitly
+- `~/.local/share/usbformat-iso-burner`
+- `~/.local/share/applications/usbformat-iso-burner.desktop`
+
+## Development
+
+Basic local validation:
+
+```bash
+python3 -m py_compile iso_gui.py
+python3 -m unittest discover -s tests -p "test_*.py"
+```
+
+Rebuild the Linux binary release:
+
+```bash
+./build-binary-release.sh
+```
+
+## Repository Files
+
+- `iso_gui.py`: main application source
+- `run.sh`: source launcher
+- `install.sh`: local installer
+- `build-binary-release.sh`: rebuild script for the Linux binary release
+- `usbformat-iso-burner.desktop`: desktop launcher definition
+- `requirements.txt`: Python dependency list
+- `usbformat-iso-burner-linux-x86_64.tar.gz`: Linux binary release archive
+- `usbformat-iso-burner-portable.tar.gz`: portable Python package
+- `SHA256SUMS`: checksums for downloadable artifacts
+- `release-notes.md`: short binary release notes
+
+## Open Source
+
+- License: `MIT`
+- Changelog: [`CHANGELOG.md`](./CHANGELOG.md)
+- Contribution guide: [`CONTRIBUTING.md`](./CONTRIBUTING.md)
+- Code of conduct: [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md)
+- Security policy: [`SECURITY.md`](./SECURITY.md)
+
+Issues and pull requests are welcome.
 
 ## License
 
-This project is released under the `MIT` License. See [`LICENSE`](./LICENSE).
+Released under the `MIT` License. See [`LICENSE`](./LICENSE).
