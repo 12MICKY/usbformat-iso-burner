@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=USB Formatter and ISO Burner
+Comment=Format USB drives and write ISO images
+Exec=__APP_DIR__/run.sh
+Terminal=false
+Categories=Utility;System;

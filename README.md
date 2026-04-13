@@ -52,12 +52,34 @@ On Debian/Ubuntu-based systems, the system tools are typically available from pa
 sudo apt install util-linux polkit exfatprogs dosfstools ntfs-3g e2fsprogs
 ```
 
+## Download and Use
+
+If you want a ready-to-download package from GitHub, use the portable archive from the repository and run:
+
+```bash
+tar -xzf usbformat-iso-burner-portable.tar.gz
+cd usbformat-iso-burner-portable
+./run.sh
+```
+
+For local installation with an application launcher:
+
+```bash
+./install.sh
+```
+
 ## Run
 
 From the project directory:
 
 ```bash
 python3 iso_gui.py
+```
+
+Or use:
+
+```bash
+./run.sh
 ```
 
 ## Open Source
@@ -91,7 +113,11 @@ The main GUI lives in [`iso_gui.py`](./iso_gui.py).
 
 ```text
 .
+├── install.sh
 ├── iso_gui.py
+├── requirements.txt
+├── run.sh
+├── usbformat-iso-burner.desktop
 └── README.md
 ```
 
