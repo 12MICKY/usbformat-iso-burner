@@ -1,6 +1,10 @@
 # USB Formatter and ISO Burner
 
-Simple PyQt6 desktop app for Linux that can:
+A Linux desktop utility for formatting removable USB drives and writing ISO images with a focused PyQt6 interface.
+
+## Overview
+
+This project provides a small Linux-first GUI for two common low-level USB tasks:
 
 - detect USB and removable drives
 - format a selected drive as `exFAT`, `FAT32`, `NTFS`, or `ext4`
@@ -11,6 +15,21 @@ The app is designed for local Linux use and asks for elevated privileges with `p
 
 This project is open source and open to improvements, bug reports, and pull requests.
 
+## Quick Start
+
+Download the repository archive or clone the project, then run:
+
+```bash
+./run.sh
+```
+
+If `PyQt6` is not installed yet:
+
+```bash
+pip install -r requirements.txt
+./run.sh
+```
+
 ## Features
 
 - GUI for selecting removable drives
@@ -18,6 +37,14 @@ This project is open source and open to improvements, bug reports, and pull requ
 - Confirmation prompt that requires typing the target device path
 - Automatic unmount before formatting or flashing
 - Built-in log output for progress and errors
+- Portable package included in the repository
+- Optional local desktop launcher installation via `install.sh`
+
+## Intended Platform
+
+- primary target: Linux desktop systems
+- tested flow: Python + PyQt6 + `pkexec`
+- not intended for Windows or macOS in its current form
 
 ## Requirements
 
@@ -82,12 +109,23 @@ Or use:
 ./run.sh
 ```
 
+## Repository Files
+
+- `iso_gui.py`: main application source
+- `run.sh`: simple launcher script
+- `install.sh`: local user installation helper
+- `usbformat-iso-burner.desktop`: desktop launcher definition
+- `usbformat-iso-burner-portable.tar.gz`: portable archive for direct download
+- `requirements.txt`: Python dependency list
+
 ## Open Source
 
 - License: `MIT`
 - Contributions: welcome through issues and pull requests
 - Code of conduct: see [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md)
 - Contribution guide: see [`CONTRIBUTING.md`](./CONTRIBUTING.md)
+- Security policy: see [`SECURITY.md`](./SECURITY.md)
+- Changelog: see [`CHANGELOG.md`](./CHANGELOG.md)
 
 ## How It Works
 
@@ -124,7 +162,6 @@ The main GUI lives in [`iso_gui.py`](./iso_gui.py).
 ## Possible Improvements
 
 - package the app with a desktop entry and icon
-- add a requirements file
 - add unit tests for device parsing and validation logic
 - support labels and partition table creation explicitly
 
