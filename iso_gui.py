@@ -25,105 +25,120 @@ from PyQt6.QtWidgets import (
     QTextEdit,
     QVBoxLayout,
     QWidget,
+    QStyleFactory,
 )
 
 
 LSBLK_COLUMNS = "NAME,PATH,TYPE,SIZE,MODEL,TRAN,HOTPLUG,RM,MOUNTPOINTS"
 APP_STYLESHEET = """
 QWidget {
-    background: #f4efe6;
-    color: #1f2933;
+    background: #f6f7f8;
+    color: #202223;
     font-family: "Noto Sans", "DejaVu Sans", sans-serif;
     font-size: 14px;
 }
 QTabWidget::pane {
-    border: 1px solid #d6c6ad;
-    border-radius: 14px;
-    background: #fffdf8;
-    margin-top: 8px;
+    border: 1px solid #cfd4dc;
+    border-radius: 8px;
+    background: #ffffff;
+    margin-top: 6px;
 }
 QTabBar::tab {
-    background: #eadfcf;
-    border: 1px solid #d6c6ad;
+    background: #e9edf2;
+    border: 1px solid #cfd4dc;
     border-bottom: none;
-    padding: 10px 16px;
-    margin-right: 6px;
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
-    font-weight: 600;
+    padding: 8px 14px;
+    margin-right: 4px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    font-weight: 500;
 }
 QTabBar::tab:selected {
-    background: #fffdf8;
-    color: #7a4b20;
+    background: #ffffff;
+    color: #1c4f80;
 }
 QListWidget, QTextEdit {
-    background: #fffdf8;
-    border: 1px solid #d6c6ad;
-    border-radius: 14px;
+    background: #ffffff;
+    border: 1px solid #cfd4dc;
+    border-radius: 8px;
     padding: 8px;
 }
 QListWidget::item {
-    padding: 12px;
-    margin: 4px 0;
-    border-radius: 10px;
+    padding: 10px;
+    margin: 2px 0;
+    border-radius: 6px;
 }
 QListWidget::item:selected {
-    background: #f3dcc4;
-    color: #1f2933;
+    background: #dbeafe;
+    color: #202223;
 }
 QPushButton {
-    background: #b9652a;
-    color: white;
-    border: none;
-    border-radius: 12px;
-    padding: 10px 14px;
-    font-weight: 600;
+    background: #eef1f5;
+    color: #202223;
+    border: 1px solid #c7cfd8;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-weight: 500;
 }
 QPushButton:hover {
-    background: #9f5724;
+    background: #e4e9ef;
+}
+QPushButton:pressed {
+    background: #dbe2ea;
 }
 QPushButton:disabled {
-    background: #ccb9a3;
-    color: #f8f5ef;
+    background: #f3f4f6;
+    color: #95a0ad;
+    border: 1px solid #dde2e8;
+}
+QPushButton[primary="true"] {
+    background: #1f6feb;
+    color: white;
+    border: 1px solid #1a61ce;
+}
+QPushButton[primary="true"]:hover {
+    background: #1a61ce;
 }
 QPushButton[danger="true"] {
-    background: #8f2d1f;
+    background: #fff5f5;
+    color: #b42318;
+    border: 1px solid #f0c7c2;
 }
 QPushButton[danger="true"]:hover {
-    background: #772418;
+    background: #fdecec;
 }
 QLabel[card="true"] {
-    background: #fffdf8;
-    border: 1px solid #d6c6ad;
-    border-radius: 14px;
+    background: #ffffff;
+    border: 1px solid #cfd4dc;
+    border-radius: 8px;
     padding: 14px;
 }
 QLabel[muted="true"] {
-    color: #5d6b7a;
+    color: #667085;
 }
 QLabel[status="ready"] {
-    background: #dcefd8;
-    color: #1d5f35;
-    border: 1px solid #b8d9b0;
+    background: #ecfdf3;
+    color: #067647;
+    border: 1px solid #abefc6;
     border-radius: 999px;
-    padding: 6px 12px;
-    font-weight: 700;
+    padding: 4px 10px;
+    font-weight: 600;
 }
 QLabel[status="busy"] {
-    background: #fde8c8;
-    color: #915c00;
-    border: 1px solid #f2cb8c;
+    background: #eff8ff;
+    color: #175cd3;
+    border: 1px solid #b2ddff;
     border-radius: 999px;
-    padding: 6px 12px;
-    font-weight: 700;
+    padding: 4px 10px;
+    font-weight: 600;
 }
 QLabel[status="warn"] {
-    background: #f7d7d2;
-    color: #922b21;
-    border: 1px solid #e9b2a8;
+    background: #fffaeb;
+    color: #b54708;
+    border: 1px solid #fedf89;
     border-radius: 999px;
-    padding: 6px 12px;
-    font-weight: 700;
+    padding: 4px 10px;
+    font-weight: 600;
 }
 """
 
@@ -328,13 +343,14 @@ class UsbUtilityWindow(QWidget):
 
         layout = QVBoxLayout()
         layout.setSpacing(14)
+        layout.setContentsMargins(18, 18, 18, 18)
 
         title = QLabel("USB Formatter and ISO Flasher")
-        title.setStyleSheet("font-size: 28px; font-weight: 800; color: #7a4b20;")
+        title.setStyleSheet("font-size: 24px; font-weight: 700; color: #202223;")
         layout.addWidget(title)
 
         help_text = QLabel(
-            "เลือกแฟลชไดรฟ์ปลายทางสำหรับฟอร์แมตหรือแฟลช ISO ทุกการทำงานจะลบข้อมูลบนไดรฟ์ที่เลือก"
+            "Select a target USB drive for formatting or ISO writing. All operations erase data on the selected drive."
         )
         help_text.setWordWrap(True)
         help_text.setProperty("muted", True)
@@ -351,6 +367,7 @@ class UsbUtilityWindow(QWidget):
         disk_row.addWidget(self.status_badge)
 
         self.refresh_btn = QPushButton("Refresh")
+        self.refresh_btn.setProperty("primary", True)
         self.refresh_btn.clicked.connect(self.load_devices)
         disk_row.addWidget(self.refresh_btn)
         layout.addLayout(disk_row)
@@ -387,9 +404,10 @@ class UsbUtilityWindow(QWidget):
         layout = QVBoxLayout()
 
         format_help = QLabel(
-            "รองรับ exFAT, FAT32, NTFS และ ext4 โดยจะฟอร์แมตลงทั้งอุปกรณ์ที่เลือกโดยตรง"
+            "Create a new filesystem directly on the selected device. Supported: exFAT, FAT32, NTFS, and ext4."
         )
         format_help.setWordWrap(True)
+        format_help.setProperty("muted", True)
         layout.addWidget(format_help)
 
         fs_row = QHBoxLayout()
@@ -412,18 +430,20 @@ class UsbUtilityWindow(QWidget):
         layout = QVBoxLayout()
 
         flash_help = QLabel(
-            "เลือกไฟล์ ISO แล้วแฟลชลงแฟลชไดรฟ์ด้วย dd แบบทั้งดิสก์"
+            "Choose an ISO image and write it to the entire USB device with dd."
         )
         flash_help.setWordWrap(True)
+        flash_help.setProperty("muted", True)
         layout.addWidget(flash_help)
 
         iso_row = QHBoxLayout()
-        self.iso_label = QLabel("ISO: ยังไม่ได้เลือกไฟล์")
+        self.iso_label = QLabel("ISO: No file selected")
         self.iso_label.setProperty("card", True)
         self.iso_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         iso_row.addWidget(self.iso_label, 1)
 
         self.browse_btn = QPushButton("Choose ISO")
+        self.browse_btn.setProperty("primary", True)
         self.browse_btn.clicked.connect(self.choose_iso)
         iso_row.addWidget(self.browse_btn)
         layout.addLayout(iso_row)
@@ -513,7 +533,7 @@ class UsbUtilityWindow(QWidget):
         typed, ok = QInputDialog.getText(
             self,
             "Confirm Target",
-            f'พิมพ์ {device["path"]} เพื่อยืนยัน{action_text}',
+            f'Type {device["path"]} to confirm {action_text}',
         )
         return ok and typed.strip() == device["path"]
 
@@ -534,20 +554,20 @@ class UsbUtilityWindow(QWidget):
 
     def start_flash(self) -> None:
         if not self.iso_path:
-            QMessageBox.warning(self, "Missing ISO", "เลือกไฟล์ ISO ก่อน")
+            QMessageBox.warning(self, "Missing ISO", "Select an ISO file first.")
             return
 
         iso_file = Path(self.iso_path)
         if not iso_file.is_file():
-            QMessageBox.warning(self, "Missing ISO", "ไม่พบไฟล์ ISO ที่เลือกไว้")
+            QMessageBox.warning(self, "Missing ISO", "The selected ISO file was not found.")
             return
 
         device = self.selected_device()
         if device is None:
-            QMessageBox.warning(self, "Missing Drive", "เลือกแฟลชไดรฟ์เป้าหมายก่อน")
+            QMessageBox.warning(self, "Missing Drive", "Select a target USB drive first.")
             return
 
-        if not self.confirm_device(device, "การลบข้อมูลทั้งหมดและแฟลช ISO ลงไดรฟ์นี้"):
+        if not self.confirm_device(device, "erasing all data and writing the ISO to this drive"):
             return
 
         self.start_process(
@@ -558,12 +578,12 @@ class UsbUtilityWindow(QWidget):
     def start_format(self, filesystem: str) -> None:
         device = self.selected_device()
         if device is None:
-            QMessageBox.warning(self, "Missing Drive", "เลือกแฟลชไดรฟ์ที่จะฟอร์แมตก่อน")
+            QMessageBox.warning(self, "Missing Drive", "Select a USB drive to format first.")
             return
 
         if not self.confirm_device(
             device,
-            f"การลบข้อมูลทั้งหมดและฟอร์แมตเป็น {filesystem.upper()}",
+            f"erasing all data and formatting as {filesystem.upper()}",
         ):
             return
 
@@ -596,7 +616,7 @@ class UsbUtilityWindow(QWidget):
         QMessageBox.warning(
             self,
             "Failed",
-            "Operation failed or was cancelled. ตรวจ log ด้านล่างเพื่อดูรายละเอียด",
+            "Operation failed or was cancelled. Check the log below for details.",
         )
 
 
@@ -606,6 +626,8 @@ def run_gui() -> int:
         return 1
 
     app = QApplication(sys.argv)
+    if "Fusion" in QStyleFactory.keys():
+        app.setStyle(QStyleFactory.create("Fusion"))
     window = UsbUtilityWindow()
     window.show()
     return app.exec()
