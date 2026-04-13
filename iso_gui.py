@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -21,6 +22,7 @@ from PyQt6.QtWidgets import (
     QListWidgetItem,
     QMessageBox,
     QPushButton,
+    QProgressBar,
     QTabWidget,
     QTextEdit,
     QVBoxLayout,
@@ -29,7 +31,9 @@ from PyQt6.QtWidgets import (
 )
 
 
+APP_VERSION = "0.2.0"
 LSBLK_COLUMNS = "NAME,PATH,TYPE,SIZE,MODEL,TRAN,HOTPLUG,RM,MOUNTPOINTS"
+DD_PROGRESS_RE = re.compile(r"^\s*(\d+)\s+bytes")
 APP_STYLESHEET = """
 QWidget {
     background: #f6f7f8;
@@ -140,6 +144,17 @@ QLabel[status="warn"] {
     padding: 4px 10px;
     font-weight: 600;
 }
+QProgressBar {
+    background: #ffffff;
+    border: 1px solid #cfd4dc;
+    border-radius: 6px;
+    text-align: center;
+    min-height: 18px;
+}
+QProgressBar::chunk {
+    background: #1f6feb;
+    border-radius: 5px;
+}
 """
 
 
@@ -211,6 +226,13 @@ def device_summary_html(device: dict | None) -> str:
         f"Flags: {device_flags_text(device)}<br>"
         f"Mounted partitions: {mounted_text}"
     )
+
+
+def extract_dd_progress_bytes(line: str) -> int | None:
+    match = DD_PROGRESS_RE.match(line.strip())
+    if not match:
+        return None
+    return int(match.group(1))
 
 
 def run_root_command(command: list[str]) -> int:
@@ -336,8 +358,10 @@ class UsbUtilityWindow(QWidget):
         self.iso_path: str = ""
         self.devices: list[dict] = []
         self.process: QProcess | None = None
+        self.progress_total_bytes: int | None = None
+        self.progress_mode = "idle"
 
-        self.setWindowTitle("USB Formatter and ISO Flasher")
+        self.setWindowTitle(f"USB Formatter and ISO Flasher {APP_VERSION}")
         self.resize(920, 720)
         self.setStyleSheet(APP_STYLESHEET)
 
@@ -348,6 +372,10 @@ class UsbUtilityWindow(QWidget):
         title = QLabel("USB Formatter and ISO Flasher")
         title.setStyleSheet("font-size: 24px; font-weight: 700; color: #202223;")
         layout.addWidget(title)
+
+        version_label = QLabel(f"Version {APP_VERSION}")
+        version_label.setProperty("muted", True)
+        layout.addWidget(version_label)
 
         help_text = QLabel(
             "Select a target USB drive for formatting or ISO writing. All operations erase data on the selected drive."
@@ -386,6 +414,19 @@ class UsbUtilityWindow(QWidget):
         self.tabs.addTab(self.build_format_tab(), "Format USB")
         self.tabs.addTab(self.build_flash_tab(), "Flash ISO")
         layout.addWidget(self.tabs)
+
+        progress_label = QLabel("Progress")
+        layout.addWidget(progress_label)
+
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setRange(0, 100)
+        self.progress_bar.setValue(0)
+        self.progress_bar.setFormat("%p%")
+        layout.addWidget(self.progress_bar)
+
+        self.progress_detail = QLabel("Idle")
+        self.progress_detail.setProperty("muted", True)
+        layout.addWidget(self.progress_detail)
 
         log_label = QLabel("Log")
         layout.addWidget(log_label)
@@ -470,7 +511,8 @@ class UsbUtilityWindow(QWidget):
         )
         if filename:
             self.iso_path = filename
-            self.iso_label.setText(f"ISO: {filename}")
+            size_text = self.human_size(Path(filename).stat().st_size) if Path(filename).is_file() else "unknown size"
+            self.iso_label.setText(f"ISO: {filename}\nSize: {size_text}")
             self.update_action_state()
 
     def update_status(self, kind: str, text: str) -> None:
@@ -481,6 +523,30 @@ class UsbUtilityWindow(QWidget):
 
     def update_selection_summary(self) -> None:
         self.selection_summary.setText(device_summary_html(self.selected_device()))
+
+    def update_progress(self, value: int | None, detail: str) -> None:
+        if value is None:
+            self.progress_bar.setRange(0, 0)
+        else:
+            self.progress_bar.setRange(0, 100)
+            self.progress_bar.setValue(max(0, min(100, value)))
+        self.progress_detail.setText(detail)
+
+    def reset_progress(self) -> None:
+        self.progress_total_bytes = None
+        self.progress_mode = "idle"
+        self.progress_bar.setRange(0, 100)
+        self.progress_bar.setValue(0)
+        self.progress_detail.setText("Idle")
+
+    def human_size(self, size: int) -> str:
+        value = float(size)
+        units = ["B", "KiB", "MiB", "GiB", "TiB"]
+        for unit in units:
+            if value < 1024 or unit == units[-1]:
+                return f"{value:.1f} {unit}"
+            value /= 1024
+        return f"{size} B"
 
     def update_action_state(self) -> None:
         device_selected = self.selected_device() is not None
@@ -494,7 +560,16 @@ class UsbUtilityWindow(QWidget):
 
     def load_devices(self) -> None:
         self.disk_list.clear()
-        self.devices = iter_usb_disks()
+        try:
+            self.devices = iter_usb_disks()
+        except (subprocess.CalledProcessError, json.JSONDecodeError) as exc:
+            self.devices = []
+            self.disk_list.addItem("Failed to query block devices")
+            self.append_log(f"Device scan failed: {exc}\n")
+            self.update_status("warn", "Device scan failed")
+            self.update_selection_summary()
+            self.update_action_state()
+            return
 
         if not self.devices:
             self.disk_list.addItem("No USB/removable drives detected")
@@ -528,6 +603,10 @@ class UsbUtilityWindow(QWidget):
         self.browse_btn.setEnabled(not busy)
         self.update_status("busy" if busy else "ready", "Working..." if busy else "Ready")
         self.update_action_state()
+        if busy and self.progress_mode != "flash":
+            self.update_progress(None, "Running privileged operation...")
+        if not busy and self.progress_mode == "idle":
+            self.reset_progress()
 
     def confirm_device(self, device: dict, action_text: str) -> bool:
         typed, ok = QInputDialog.getText(
@@ -537,11 +616,24 @@ class UsbUtilityWindow(QWidget):
         )
         return ok and typed.strip() == device["path"]
 
-    def start_process(self, arguments: list[str], summary_lines: list[str]) -> None:
+    def start_process(
+        self,
+        arguments: list[str],
+        summary_lines: list[str],
+        *,
+        progress_mode: str,
+        progress_total_bytes: int | None = None,
+    ) -> None:
         self.log_output.clear()
         for line in summary_lines:
             self.append_log(f"{line}\n")
         self.append_log("Starting privileged process ...\n")
+        self.progress_mode = progress_mode
+        self.progress_total_bytes = progress_total_bytes
+        if progress_mode == "flash" and progress_total_bytes:
+            self.update_progress(0, f"Preparing to write {self.human_size(progress_total_bytes)} ...")
+        else:
+            self.update_progress(None, "Running privileged operation...")
 
         self.process = QProcess(self)
         self.process.setProgram("pkexec")
@@ -573,6 +665,8 @@ class UsbUtilityWindow(QWidget):
         self.start_process(
             ["--worker-flash", self.iso_path, device["path"]],
             [f"ISO: {self.iso_path}", f"Target: {device['path']}"],
+            progress_mode="flash",
+            progress_total_bytes=iso_file.stat().st_size,
         )
 
     def start_format(self, filesystem: str) -> None:
@@ -590,6 +684,7 @@ class UsbUtilityWindow(QWidget):
         self.start_process(
             ["--worker-format", device["path"], filesystem],
             [f"Operation: format {filesystem.upper()}", f"Target: {device['path']}"],
+            progress_mode="format",
         )
 
     def on_ready_output(self) -> None:
@@ -597,6 +692,14 @@ class UsbUtilityWindow(QWidget):
             return
         data = bytes(self.process.readAllStandardOutput()).decode(errors="replace")
         self.append_log(data)
+        if self.progress_mode == "flash" and self.progress_total_bytes:
+            for line in data.splitlines():
+                copied = extract_dd_progress_bytes(line)
+                if copied is None:
+                    continue
+                percent = int((copied / self.progress_total_bytes) * 100)
+                detail = f"Wrote {self.human_size(copied)} of {self.human_size(self.progress_total_bytes)}"
+                self.update_progress(percent, detail)
 
     def on_ready_error(self) -> None:
         if self.process is None:
@@ -610,9 +713,13 @@ class UsbUtilityWindow(QWidget):
         self.load_devices()
         if exit_code == 0:
             self.update_status("ready", "Operation complete")
+            self.update_progress(100, "Operation complete")
+            self.progress_mode = "idle"
             QMessageBox.information(self, "Done", "Operation complete")
             return
         self.update_status("warn", "Operation failed")
+        self.update_progress(0, "Operation failed")
+        self.progress_mode = "idle"
         QMessageBox.warning(
             self,
             "Failed",

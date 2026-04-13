@@ -37,6 +37,7 @@ pip install -r requirements.txt
 - Confirmation prompt that requires typing the target device path
 - Automatic unmount before formatting or flashing
 - Built-in log output for progress and errors
+- Live progress bar while writing ISO images
 - Portable package included in the repository
 - Optional local desktop launcher installation via `install.sh`
 
@@ -118,6 +119,15 @@ Or use:
 - `usbformat-iso-burner-portable.tar.gz`: portable archive for direct download
 - `requirements.txt`: Python dependency list
 
+## Development
+
+Run a basic verification locally:
+
+```bash
+python3 -m py_compile iso_gui.py
+python3 -m unittest discover -s tests -p "test_*.py"
+```
+
 ## Open Source
 
 - License: `MIT`
@@ -137,6 +147,7 @@ The application uses:
 - `wipefs -a` before formatting
 - `mkfs.*` to create the selected filesystem
 - `dd` to write an ISO image directly to the whole device
+- a GUI progress indicator that parses `dd` byte progress output during ISO writes
 
 The main GUI lives in [`iso_gui.py`](./iso_gui.py).
 

@@ -4,4 +4,5 @@ Name=USB Formatter and ISO Burner
 Comment=Format USB drives and write ISO images
 Exec=__APP_DIR__/run.sh
 Terminal=false
+Icon=drive-removable-media-usb
 Categories=Utility;System;

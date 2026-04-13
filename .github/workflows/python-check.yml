@@ -18,3 +18,6 @@ jobs:
 
       - name: Compile application
         run: python -m py_compile iso_gui.py
+
+      - name: Run tests
+        run: python -m unittest discover -s tests -p "test_*.py"
