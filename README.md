@@ -17,6 +17,8 @@ Latest release:
 - Portable Python package: `usbformat-iso-burner-portable.tar.gz`
 - Checksums: `SHA256SUMS`
 
+Release archives are published as GitHub release assets. They are not kept in the main branch to avoid oversized repository files.
+
 ## Quick Start
 
 ### Option 1: Linux binary
@@ -160,8 +162,6 @@ That script also rebuilds the portable archive and refreshes `SHA256SUMS`.
 - `build-binary-release.sh`: rebuild script for the Linux binary release
 - `usbformat-iso-burner.desktop`: desktop launcher definition
 - `requirements.txt`: Python dependency list
-- `usbformat-iso-burner-linux-x86_64.tar.gz`: Linux binary release archive
-- `usbformat-iso-burner-portable.tar.gz`: portable Python package
 - `SHA256SUMS`: checksums for downloadable artifacts
 - `release-notes.md`: short binary release notes
 

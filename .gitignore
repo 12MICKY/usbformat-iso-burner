@@ -5,3 +5,5 @@ build/
 dist/
 release/
 *.spec
+usbformat-iso-burner-linux-x86_64.tar.gz
+usbformat-iso-burner-portable.tar.gz

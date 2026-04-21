@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - sped up ISO writes by switching to a larger `dd` block size and removing extra sync overhead
 - preserved the selected device during refresh to make device rescans feel smoother
 - updated the release build script to regenerate both binary and portable archives with fresh checksums
+- stopped tracking release tarballs in the main branch to avoid GitHub large-file warnings
 
 ## 2026-04-13
 
