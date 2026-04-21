@@ -1,6 +1,13 @@
 import unittest
+from pathlib import Path
 
-from iso_gui import device_flags_text, extract_dd_progress_bytes, format_device, mounted_partitions
+from iso_gui import (
+    dd_command_args,
+    device_flags_text,
+    extract_dd_progress_bytes,
+    format_device,
+    mounted_partitions,
+)
 
 
 class IsoGuiHelpersTest(unittest.TestCase):
@@ -40,6 +47,14 @@ class IsoGuiHelpersTest(unittest.TestCase):
 
     def test_extract_dd_progress_bytes_invalid_line(self) -> None:
         self.assertIsNone(extract_dd_progress_bytes("Writing ISO. This may take several minutes ..."))
+
+    def test_dd_command_args_uses_faster_defaults(self) -> None:
+        command = dd_command_args(Path("/tmp/test.iso"), "/dev/sdb")
+        self.assertEqual(command[0], "dd")
+        self.assertIn("bs=16M", command)
+        self.assertIn("iflag=fullblock", command)
+        self.assertIn("conv=fsync", command)
+        self.assertNotIn("oflag=sync", command)
 
 
 if __name__ == "__main__":

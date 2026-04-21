@@ -2,12 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## 2026-04-21
 
 - repository polish and GitHub community files
 - added a Linux x86_64 PyInstaller binary release archive
 - added checksums for downloadable artifacts
 - added release notes for binary distribution
+- improved GUI responsiveness by batching log output and throttling progress updates
+- sped up ISO writes by switching to a larger `dd` block size and removing extra sync overhead
+- preserved the selected device during refresh to make device rescans feel smoother
 
 ## 2026-04-13
 

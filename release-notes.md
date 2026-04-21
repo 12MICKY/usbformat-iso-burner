@@ -1,4 +1,4 @@
-# Linux Binary Release
+# Linux Binary Release v0.2.1
 
 This repository includes a built Linux x86_64 executable:
 
@@ -24,3 +24,9 @@ Notes:
 - target platform: Linux x86_64
 - built on Linux with PyInstaller
 - `pkexec` and system disk utilities are still required at runtime
+
+Recent source updates:
+
+- smoother progress and log rendering during long-running operations
+- faster ISO flashing defaults using a larger `dd` block size
+- less UI churn when refreshing removable device lists

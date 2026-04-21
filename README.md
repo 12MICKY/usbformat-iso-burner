@@ -12,7 +12,7 @@ This project is Linux-first, open source, and intended for local desktop use wit
 
 Latest release:
 
-- Release page: `https://github.com/12MICKY/usbformat-iso-burner/releases/tag/v0.2.0`
+- Release page: `https://github.com/12MICKY/usbformat-iso-burner/releases/tag/v0.2.1`
 - Linux binary: `usbformat-iso-burner-linux-x86_64.tar.gz`
 - Portable Python package: `usbformat-iso-burner-portable.tar.gz`
 - Checksums: `SHA256SUMS`
@@ -64,6 +64,8 @@ Current checksums:
 - requires typed confirmation of the target device path
 - shows log output inside the app
 - shows live progress while writing ISO images
+- batches log/progress updates to keep the GUI responsive during long operations
+- uses faster `dd` defaults for better ISO write throughput
 - includes a Python portable package and a Linux binary release
 
 ## Runtime Requirements
@@ -114,6 +116,7 @@ The application uses:
 - `mkfs.*` for filesystem creation
 - `dd` for direct ISO-to-device writes
 - a GUI progress bar that parses `dd` byte progress output
+- throttled UI updates so progress rendering does not overwhelm the interface during writes
 
 Main source file:
 
